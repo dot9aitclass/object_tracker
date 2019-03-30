@@ -1,9 +1,11 @@
-import pandas as pd
+#import pandas as pd
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
- 
+from yuvtrack import Tracker
+
 if __name__ == '__main__' :
+   # ind,acty,actu,actv=Tracker()
     def AVAR(imCrop):
         dim=imCrop.shape[0]*imCrop.shape[1]
         color=[0,0,0]
@@ -14,7 +16,7 @@ if __name__ == '__main__' :
                 color[2]=color[2]+imCrop[y][x][2]
         #cv2.imshow("meh",imCrop)
         return int(color[0]/dim),int(color[1]/dim),int(color[2]/dim),dim
-    cap=cv2.VideoCapture(0)
+    cap=cv2.VideoCapture(2)
     for i in range(20):
         _, frame = cap.read()
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2YUV)
@@ -22,28 +24,28 @@ if __name__ == '__main__' :
     cv2.destroyAllWindows()
     imCrop = hsv[int(r[1]):int(r[1]+r[3]), int(r[0]):int(r[0]+r[2])]
     y,u,v,area=AVAR(imCrop)
+    cv2.destroyAllWindows()
+    print (y,u,v)
+
     while True:
 
         # Take each frame
         _, frame = cap.read()
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2YUV)
-        print(y,u,v)
         lower_color = np.array([0,u-20,v-20])
         upper_color = np.array([255,u+20,v+20])        
         mask = cv2.inRange(hsv, lower_color, upper_color)
-        res = cv2.bitwise_and(frame,frame, mask= mask)
+        #res = cv2.bitwise_and(frame,frame, mask= mask)
+        contour,hierarchy=cv2.findContours(mask,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
+        for cnt in contour:
+            x, y, w, h = cv2.boundingRect(cnt)
+            cv2.rectangle(mask,(x,y),(x+w,y+h),[255,255,255],2)
 
         #thresh=cv2.Canny(res,100,200)
         cv2.imshow('result',mask)
         if cv2.waitKey(1)==27:
             break
     cv2.destroyAllWindows()
-    year = [1960, 1970, 1980, 1990, 2000, 2010]
-    pop_pakistan = [44.91, 58.09, 78.07, 107.7, 138.5, 170.6]
-    pop_india = [449.48, 553.57, 696.783, 870.133, 1000.4, 1309.1]
-    plt.plot(year, pop_pakistan, color='g')
-    plt.plot(year, pop_india, color='orange')
-    plt.xlabel('Countries')
-    plt.ylabel('Population in million')
-    plt.title('Pakistan India Population till 2010')
-    plt.show()
+    for cnt in contour:
+        print(cv2.contourArea(cnt))
+
